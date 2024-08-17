@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "auto"
+version = "0.1.0"
+description = ""
+authors = ["SeaCoffee <sapienti8sat@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+djangorestframework = "^3.15.2"
+mysqlclient = "^2.2.4"
+djangorestframework-simplejwt = "^5.3.1"
+django-filter = "^24.3"
+pillow = "^10.4.0"
+python-dotenv = "^1.0.1"
+requests = "^2.32.3"
+django-cors-headers = "^4.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

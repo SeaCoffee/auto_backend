@@ -1,0 +1,4 @@
+mysql/mysql.sock
+venv/
+mysql/
+node_modules/
