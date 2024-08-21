@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import UserCreateAPIView, UpgradeAccountAPIView, ProfileDetailView,\
-    CreateManagerView, UserAddAvatarAPIView, UserDeleteSelfView, AddToBlacklistView
+    CreateManagerView, UserAddAvatarAPIView, UserDeleteSelfView, AddToBlacklistView, CurrentUsereDetailsView
 
 urlpatterns = [
     path('', UserCreateAPIView.as_view(), name='user-create'),
@@ -11,4 +11,5 @@ urlpatterns = [
     path('avatars/', UserAddAvatarAPIView.as_view(), name='add_avatar'),
     path('delete-account/', UserDeleteSelfView.as_view(), name='delete-account'),
     path('blacklist/manage/', AddToBlacklistView.as_view(), name='manage-blacklist'),
+    path('user/', CurrentUsereDetailsView.as_view(), name='current-user'),
 ]

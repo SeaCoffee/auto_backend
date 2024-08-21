@@ -12,12 +12,14 @@ from django.db.models import Avg
 from cars.filters import CarFilter
 from cars.models import CarModel
 from core.pagination import PagePagination
+from core.enums.country_region_enum import Region
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 from core.permissions import IsSeller,  IsPremiumSeller, IsManager, IsSellerOrManagerAndOwner
 
 from .serializers import ListingPhotoSerializer, ListingCreateSerializer,\
-    ListingUpdateSerializer, PremiumStatsSerializer, ListingListSerializer
+    ListingUpdateSerializer, PremiumStatsSerializer, ListingListSerializer, ListingDetailSerializer
 from .models import ListingModel
 from .filters import ListingFilter
 
@@ -39,14 +41,17 @@ class ListingAddPhotoAPIView(UpdateAPIView):
 
 
 class ListingCreateView(CreateAPIView):
+    parser_classes = (MultiPartParser, FormParser)
     queryset = ListingModel.objects.all()
     serializer_class = ListingCreateSerializer
     permission_classes = [IsSeller]
+
 
 class ListingUpdateView(UpdateAPIView):
     queryset = ListingModel.objects.all()
     serializer_class = ListingUpdateSerializer
     permission_classes = [IsSellerOrManagerAndOwner]
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         user = self.request.user
@@ -58,7 +63,7 @@ class ListingUpdateView(UpdateAPIView):
 class ListingDeleteView(DestroyAPIView):
     queryset = ListingModel.objects.all()
     serializer_class = ListingCreateSerializer
-    permission_classes = [IsSeller, IsManager]
+    permission_classes = [IsSellerOrManagerAndOwner]
 
     def get_object(self):
         obj = super().get_object()
@@ -80,6 +85,12 @@ class PremiumStatsView(RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsPremiumSeller]
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({'error': 'User is not authenticated'}, status=401)
+
+        if not hasattr(request.user, 'role'):
+            return Response({'error': 'User does not have a role'}, status=400)
+
         listing_id = kwargs.get('listing_id')
         listing = ListingModel.objects.filter(id=listing_id).select_related('car').first()
         if not listing:
@@ -104,3 +115,46 @@ class PremiumStatsView(RetrieveAPIView):
             'average_price_by_region': region_avg_price,
             'average_price_by_country': country_avg_price
         })
+
+
+class RegionsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        return Response({
+            'regions': [(region.value, region.name) for region in Region]
+        })
+
+
+class UserListingsView(ListAPIView):
+    serializer_class = ListingListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Возвращаем только объявления, принадлежащие текущему пользователю
+        return ListingModel.objects.filter(seller=self.request.user)
+
+
+
+class ListingRetrieveView(RetrieveAPIView):
+    queryset = ListingModel.objects.all()
+    serializer_class = ListingUpdateSerializer
+    permission_classes = [IsSellerOrManagerAndOwner]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role.name == 'seller':
+            return ListingModel.objects.filter(seller=user)
+        return ListingModel.objects.all()
+
+
+class ListingRetrieveDetailView(RetrieveAPIView):
+    queryset = ListingModel.objects.select_related('car')
+    serializer_class = ListingDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            if hasattr(user, 'role') and user.role.name == 'seller':
+                return ListingModel.objects.filter(seller=user)
+        return ListingModel.objects.all()

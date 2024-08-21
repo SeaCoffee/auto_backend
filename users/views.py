@@ -12,7 +12,7 @@ from django.http import Http404
 
 
 from .serializers import UserSerializer, UpgradeAccountSerializer, ProfileSerializer,  \
-    ProfileAvatarSerializer, BlacklistSerializer, ManagerSerializer
+    ProfileAvatarSerializer, BlacklistSerializer, ManagerSerializer, UserDetailSerializer
 from .models import UserModel, ProfileModel, BlacklistModel
 from core.permissions import IsManager
 
@@ -115,3 +115,9 @@ class AddToBlacklistView(APIView):
             return Response({"detail": "User not found in blacklist."}, status=status.HTTP_404_NOT_FOUND)
 
 
+class CurrentUsereDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserDetailSerializer(request.user)
+        return Response(serializer.data)

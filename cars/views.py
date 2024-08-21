@@ -37,17 +37,19 @@ class CarRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         self.perform_destroy(instance)
         return Response({"detail": "Car successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class BrandModelDataView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
         brands = Brand.objects.all()
-        models = ModelName.objects.all()
-
         brand_serializer = BrandSerializer(brands, many=True)
-        model_serializer = ModelNameSerializer(models, many=True)
+
+        # Словарь для связывания брендов с моделями
+        brands_models = {brand.id: ModelNameSerializer(ModelName.objects.filter(brand=brand), many=True).data for brand
+                         in brands}
 
         return Response({
             'brands': brand_serializer.data,
-            'models': model_serializer.data
+            'brands_models': brands_models
         })

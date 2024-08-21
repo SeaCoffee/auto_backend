@@ -11,8 +11,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 class CustomToken(Token):
-
-    def for_user(self, user):
+    @classmethod
+    def for_user(cls, user):
         UserModel = get_user_model()
         token = super().for_user(user)
         token['account_type'] = user.account_type
@@ -28,11 +28,13 @@ class RecoveryToken(BlacklistMixin, CustomToken):
     token_type = ActionTokenEnum.RECOVERY.token_type
     lifetime = ActionTokenEnum.RECOVERY.lifetime
 
+
 class AccessToken(BlacklistMixin, CustomToken):
     token_type = ActionTokenEnum.ACCESS.token_type
     lifetime = ActionTokenEnum.ACCESS.lifetime
 
-    def for_user(self, user):
+    @classmethod
+    def for_user(cls, user):
         token = super().for_user(user)
         token['account_type'] = user.account_type
         return token

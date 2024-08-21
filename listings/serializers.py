@@ -31,6 +31,7 @@ class ListingCreateSerializer(serializers.ModelSerializer):
     body_type = serializers.ChoiceField(choices=CarModel.BODY_TYPES, write_only=True)
     currency = serializers.PrimaryKeyRelatedField(queryset=CurrencyModel.objects.all())
     region = serializers.ChoiceField(choices=Region.choices())
+    listing_photo = serializers.ImageField(allow_null=True, required=False)  # Добавляем поле для фото
 
     class Meta:
         model = ListingModel
@@ -85,13 +86,18 @@ class ListingCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         seller = request.user
+        listing_photo = validated_data.pop('listing_photo', None)
 
-        # Вызываем метод create_listing из менеджера модели
-        return ListingModel.objects.create_listing(validated_data, seller)
+        listing = ListingModel.objects.create_listing(validated_data, seller)  # Вызов создания объявления
+
+        if listing_photo:
+            listing.listing_photo = listing_photo  # Сохранение фотографии если она есть
+            listing.save()
+
+        return listing
 
 
 class ListingDetailSerializer(serializers.ModelSerializer):
-    # Использование методов для получения brand, model_name и body_type
     brand = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     body_type = serializers.SerializerMethodField()
@@ -112,10 +118,11 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     def get_body_type(self, obj):
         return obj.car.body_type
 
+
 class ListingUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListingModel
-        fields = ('description', 'listing_photo', 'price', 'currency')
+        fields = ['title', 'description', 'price', 'currency', 'listing_photo']
 
     def validate_description(self, value):
         instance = self.instance
@@ -158,4 +165,4 @@ class ListingListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ListingModel
-        fields = ['title', 'description', 'listing_photo', 'active', 'car']
+        fields = ['id', 'title', 'description', 'listing_photo', 'active', 'car']

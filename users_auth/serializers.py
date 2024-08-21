@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-
+from .models import UserRoleModel
 UserModel = get_user_model()
 
 class EmailSerializer(serializers.Serializer):
@@ -27,3 +27,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             token['role'] = user.role.name
 
         return token
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserRoleModel
+        fields = ['id', 'name']

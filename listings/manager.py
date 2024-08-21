@@ -42,7 +42,6 @@ class ListingManager(models.Manager):
             engine=validated_data.get('engine'),
             title=validated_data.get('title'),
             description=validated_data.get('description'),
-            listing_photo=validated_data.get('listing_photo'),
             price=validated_data.get('price'),
             currency=validated_data.get('currency'),
             region=validated_data.get('region')

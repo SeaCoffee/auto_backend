@@ -1,4 +1,4 @@
-from rest_framework.generics import GenericAPIView, get_object_or_404
+from rest_framework.generics import GenericAPIView, get_object_or_404, ListAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,9 +8,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.services.jwt_service import JWTService, ActivateToken, RecoveryToken
 from users.serializers import UserSerializer
-from .serializers import EmailSerializer, PasswordSerializer, CustomTokenObtainPairSerializer
+from .serializers import EmailSerializer, PasswordSerializer, \
+    CustomTokenObtainPairSerializer, UserRoleSerializer
 from core.services.email_service import EmailService
-
+from .models import UserRoleModel
 
 UserModel = get_user_model()
 import logging
@@ -18,6 +19,20 @@ logger = logging.getLogger(__name__)
 
 class UserActivateAPIView(GenericAPIView):
     permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs['token']
+        logger.debug(f"Activating user with token: {token}")
+        try:
+            user = JWTService.validate_token(token, ActivateToken)
+            user.is_active = True
+            user.save()
+            logger.debug(f"User {user.username} activated successfully.")
+            # Перенаправление на страницу входа или другую страницу
+            return Response({'message': 'Account activated successfully! Please log in.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error activating user: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, *args, **kwargs):
         token = kwargs['token']
@@ -90,3 +105,8 @@ class ResetPasswordAPIView(GenericAPIView):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class RoleListAPIView(ListAPIView):
+    queryset = UserRoleModel.objects.all()
+    serializer_class = UserRoleSerializer
+    permission_classes = [AllowAny]
