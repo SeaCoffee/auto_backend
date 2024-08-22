@@ -4,14 +4,9 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 
-#from configs.email_configs import EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS
-EMAIL_USE_TLS = True
+from configs.email_configs import EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS
 
-EMAIL_HOST='smtp.gmail.com'
-EMAIL_HOST_USER='dexter.ukr@gmail.com'
-EMAIL_HOST_PASSWORD='oimz ixrp wsha qqmj'
-EMAIL_PORT=587
-EMAIL_USE_TLS = True
+
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -24,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c#f5=id^i7dd8fh4vw&$_y7a9^l2xt7-m)s$a8(r6+@i1r3dc9'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -32,7 +27,9 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'  # По умолчанию False
+SECRET_KEY = os.environ.get('SECRET_KEY', 'default-secret-key')
+
 
 ALLOWED_HOSTS = []
 
@@ -53,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -66,11 +62,6 @@ INSTALLED_APPS = [
     'currency',
 ]
 
-CORS_ALLOW_HEADERS = [
-    'authorization',
-    'content-type',
-]
-
 
 
 MIDDLEWARE = [
@@ -80,7 +71,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
 
@@ -111,11 +101,11 @@ WSGI_APPLICATION = 'configs.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cars_new_db',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': 3306
+        'NAME': os.environ.get('MYSQL_DATABASE', 'default_db_name'),
+        'USER': os.environ.get('MYSQL_USER', 'default_user'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'default_password'),
+        'HOST': os.environ.get('MYSQL_HOST', 'db'),
+        'PORT': os.environ.get('MYSQL_PORT', 3306)  # Убедитесь, что порт указан как число
     }
 }
 
