@@ -4,7 +4,8 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 
-from configs.email_configs import EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS
+from configs.email_conf import EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS
+from configs.celery_conf import CELERY_BROKER_URL, CELERY_BEAT_SCHEDULER, CELERY_RESULTS_BACKEND, CELERY_ACCEPT_CONTENT, CELERY_RESULT_SERIALIZER, CELERY_TASK_SERIALIZER
 
 
 
