@@ -3,13 +3,12 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 
-
 urlpatterns = [
-    path('users/', include('users.urls')),
-    path('auth/', include('users_auth.urls')),
-    path('cars/', include('cars.urls')),
-    path('listings/', include('listings.urls')),
-    path('currencies/', include('currency.urls')),
+    path('api/users/', include('users.urls')),
+    path('api/auth/', include('users_auth.urls')),
+    path('api/cars/', include('cars.urls')),
+    path('api/listings/', include('listings.urls')),
+    path('api/currencies/', include('currency.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
