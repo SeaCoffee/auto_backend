@@ -17,6 +17,8 @@ requests = "^2.32.3"
 django-cors-headers = "^4.4.0"
 celery = "^5.4.0"
 redis = "^5.0.8"
+django-celery-results = "^2.5.1"
+django-celery-beat = "^2.7.0"
 
 
 [build-system]
