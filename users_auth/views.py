@@ -1,12 +1,13 @@
 from rest_framework.generics import GenericAPIView, get_object_or_404, ListAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.http import Http404
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
 
-from core.services.jwt_service import JWTService, ActivateToken, RecoveryToken
+from core.services.jwt_service import JWTService, ActivateToken, RecoveryToken, SoketToken
 from users.serializers import UserSerializer
 from .serializers import EmailSerializer, PasswordSerializer, \
     CustomTokenObtainPairSerializer, UserRoleSerializer
@@ -110,3 +111,11 @@ class RoleListAPIView(ListAPIView):
     queryset = UserRoleModel.objects.all()
     serializer_class = UserRoleSerializer
     permission_classes = [AllowAny]
+
+
+class SoketView(GenericAPIView):
+    permission_classes = (IsAuthenticated)
+
+    def get(self, *args, **kwargs):
+        token = JWTService.create_token(self.request.user, SoketToken)
+        return Response({'token':str(token)}, status.HTTP_200_OK)

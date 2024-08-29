@@ -4,8 +4,9 @@ from datetime import timedelta
 
 class ActionTokenEnum(Enum):
     ACTIVATE = ('activate', timedelta(days=30))
-    RECOVERY = ('recovery', timedelta(days=20))
+    RECOVERY = ('recovery', timedelta(days=30))
     ACCESS = ('access', timedelta(days=30))
+    SOKET = ('socket', timedelta(minutes=30))
 
 # max lifetime for testing
 

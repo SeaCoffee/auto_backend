@@ -33,14 +33,9 @@ class AccessToken(BlacklistMixin, CustomToken):
     token_type = ActionTokenEnum.ACCESS.token_type
     lifetime = ActionTokenEnum.ACCESS.lifetime
 
-    @classmethod
-    def for_user(cls, user):
-        token = super().for_user(user)
-        token['account_type'] = user.account_type
-        return token
-
-
-
+class SoketToken(CustomToken):
+    token_type = ActionTokenEnum.SOKET.token_type
+    lifetime = ActionTokenEnum.SOKET.lifetime
 
 
 ActionTokenClassType = BlacklistMixin | Token
@@ -80,12 +75,3 @@ class JWTService:
         user.save()
         return JWTService.create_token(user)
 
-class AccessToken(BlacklistMixin, CustomToken):
-    token_type = ActionTokenEnum.ACCESS.token_type
-    lifetime = ActionTokenEnum.ACCESS.lifetime
-
-    @staticmethod
-    def for_user(user):
-        token = super(AccessToken, AccessToken).for_user(user)
-        token[' account_type'] = user.account_type
-        return token
