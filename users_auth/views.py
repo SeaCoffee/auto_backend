@@ -114,7 +114,7 @@ class RoleListAPIView(ListAPIView):
 
 
 class SoketView(GenericAPIView):
-    permission_classes = (IsAuthenticated)
+    permission_classes = [IsAuthenticated]
 
     def get(self, *args, **kwargs):
         token = JWTService.create_token(self.request.user, SoketToken)
