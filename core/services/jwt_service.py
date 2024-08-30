@@ -33,7 +33,7 @@ class AccessToken(BlacklistMixin, CustomToken):
     token_type = ActionTokenEnum.ACCESS.token_type
     lifetime = ActionTokenEnum.ACCESS.lifetime
 
-class SoketToken(CustomToken):
+class SoketToken(BlacklistMixin, CustomToken):
     token_type = ActionTokenEnum.SOKET.token_type
     lifetime = ActionTokenEnum.SOKET.lifetime
 
