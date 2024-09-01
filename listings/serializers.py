@@ -13,6 +13,8 @@ from core.enums.country_region_enum import Region
 from django.contrib.auth import get_user_model
 
 
+import logging
+logger = logging.getLogger(__name__)
 
 class ListingPhotoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,8 +32,8 @@ class ListingCreateSerializer(serializers.ModelSerializer):
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all(), write_only=True)
     body_type = serializers.ChoiceField(choices=CarModel.BODY_TYPES, write_only=True)
     currency = serializers.PrimaryKeyRelatedField(queryset=CurrencyModel.objects.all())
-    region = serializers.ChoiceField(choices=Region.choices())
-    listing_photo = serializers.ImageField(allow_null=True, required=False)  # Добавляем поле для фото
+    region = serializers.ChoiceField(choices=[(region.value, region.value) for region in Region])
+    listing_photo = serializers.ImageField(allow_null=True, required=False)
 
     class Meta:
         model = ListingModel
@@ -62,29 +64,27 @@ class ListingCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        print("Валидация данных:", data)
         request = self.context.get('request')
         seller = request.user
 
-        # Проверка на тип аккаунта
         if seller.account_type == 'basic' and ListingModel.objects.filter(seller=seller).count() >= 1:
+            print("Превышен лимит для базового аккаунта")
             raise serializers.ValidationError("Basic account holders can only create one listing.")
 
         brand = data.get('brand')
         model_name = data.get('model_name')
 
-        # Проверка существования модели под брендом
         if not ModelName.objects.filter(brand=brand, id=model_name.id).exists():
-            ManagerNotificationService.send_notification(
-                brand_name=str(brand),
-                model_name=str(model_name),
-                username=seller.username
-            )
-            raise serializers.ValidationError("Car model with specified details does not exist. You can request to add a new brand.")
+            print(f"Модель {model_name} не найдена под брендом {brand}")
+            raise serializers.ValidationError("Car model with specified details does not exist.")
 
+        print("Данные валидны")
         return data
 
     def create(self, validated_data):
         request = self.context.get('request')
+        print('request')
         seller = request.user
         listing_photo = validated_data.pop('listing_photo', None)
 

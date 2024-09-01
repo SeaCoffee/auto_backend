@@ -25,7 +25,7 @@ class ListingModel(BaseModel):
     price_usd = models.DecimalField(max_digits=10, decimal_places=2, null=True, editable=False)
     price_eur = models.DecimalField(max_digits=10, decimal_places=2, null=True, editable=False)
     price_uah = models.DecimalField(max_digits=10, decimal_places=2, null=True, editable=False)
-    region = models.CharField(max_length=50, choices=Region.choices, default=Region.KYIV)
+    region = models.CharField( max_length=50, choices=Region.choices(), default=Region.KYIV.value)
     year = models.IntegerField()
     engine = models.CharField(max_length=255)
 

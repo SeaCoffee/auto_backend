@@ -118,7 +118,7 @@ class PremiumStatsView(RetrieveAPIView):
 
 
 class RegionsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def get(self, request):
         return Response({
             'regions': [(region.value, region.name) for region in Region]
@@ -130,9 +130,7 @@ class UserListingsView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Возвращаем только объявления, принадлежащие текущему пользователю
         return ListingModel.objects.filter(seller=self.request.user)
-
 
 
 class ListingRetrieveView(RetrieveAPIView):
@@ -153,8 +151,4 @@ class ListingRetrieveDetailView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated:
-            if hasattr(user, 'role') and user.role.name == 'seller':
-                return ListingModel.objects.filter(seller=user)
         return ListingModel.objects.all()

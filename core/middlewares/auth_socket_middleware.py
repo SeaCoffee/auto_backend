@@ -6,11 +6,11 @@ from core.services.jwt_service import JWTService, SoketToken
 @database_sync_to_async
 def get_user(token):
     try:
-        user = JWTService.validate_token(token, SoketToken)
-        print(f"User validated: {user}")  # Добавлено логирование
+        user = JWTService.validate_socket_token(token)  # Удалите второй аргумент
+        print(f"User validated: {user}")  # Логирование успешно проверенного пользователя
         return user
     except Exception as e:
-        print(f"Error validating token: {e}")  # Добавлено логирование
+        print(f"Error validating token: {e}")  # Логирование ошибки
         return None
 
 

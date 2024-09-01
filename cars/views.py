@@ -45,7 +45,7 @@ class BrandModelDataView(APIView):
         brands = Brand.objects.all()
         brand_serializer = BrandSerializer(brands, many=True)
 
-        # Словарь для связывания брендов с моделями
+
         brands_models = {brand.id: ModelNameSerializer(ModelName.objects.filter(brand=brand), many=True).data for brand
                          in brands}
 

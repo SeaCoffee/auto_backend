@@ -2,15 +2,24 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from channels.db import database_sync_to_async
 from djangochannelsrestframework.decorators import action
-
+import jwt
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from channels.generic.websocket import AsyncWebsocketConsumer
 from chat.models import ChatModel
+from listings.models import ListingModel
+import json
+
+UserModel = get_user_model()
+
 
 class ChatConsumer(GenericAsyncAPIConsumer):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def init(self, *args, **kwargs):
+        super().init(*args, **kwargs)
         self.room_name = None
         self.user_name = None
+        self.listing_id = None
 
     async def connect(self):
         if not self.scope['user'] or self.scope['user'].is_anonymous:
@@ -19,7 +28,9 @@ class ChatConsumer(GenericAsyncAPIConsumer):
 
         await self.accept()
 
-        self.room_name = self.scope['url_route']['kwargs']['room']
+        # Используем listing_id из URL
+        self.listing_id = self.scope['url_route']['kwargs']['listing_id']
+        self.room_name = f"listing_{self.listing_id}"
         self.user_name = await self.get_username()
 
         await self.channel_layer.group_add(
@@ -27,23 +38,23 @@ class ChatConsumer(GenericAsyncAPIConsumer):
             self.channel_name
         )
 
-
+        # Отправка сообщения о подключении пользователя
         await self.channel_layer.group_send(
             self.room_name,
             {
                 'type': 'sender',
-                'message': f'{self.user_name} joined the room {self.room_name}'
+                'message': f'{self.user_name} присоединился к чату для объявления {self.listing_id}'
             }
         )
 
+        # Отправка предыдущих сообщений
         for message in await self.get_messages():
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     'type': 'sender',
-                    'message':message['body'],
+                    'message': message['body'],
                     'user': message['user']
-
                 }
             )
 
@@ -93,8 +104,10 @@ class ChatConsumer(GenericAsyncAPIConsumer):
 
     @database_sync_to_async
     def save_message_to_db(self, body, user):
-        ChatModel.objects.create(body=body, user=user)
+        # Сохранение сообщения с привязкой к конкретному объявлению
+        ChatModel.objects.create(body=body, user=user, listing_id=self.listing_id)
 
     @database_sync_to_async
     def get_messages(self):
-        return[{'body':item.body, 'user':item.user.username} for item in ChatModel.objects.order_by('id')]
+        # Получение сообщений для конкретного объявления
+        return [{'body': item.body, 'user': item.user.username} for item in ChatModel.objects.filter(listing_id=self.listing_id).order_by('id')]
