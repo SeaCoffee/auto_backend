@@ -101,22 +101,24 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     brand = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     body_type = serializers.SerializerMethodField()
+    currency_display = serializers.CharField(source='currency.currency_code', read_only=True)
 
     class Meta:
         model = ListingModel
         fields = (
-            'id', 'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo', 'price',
-            'currency', 'region', 'seller'
+            'id', 'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo',
+            'price', 'currency_display', 'region', 'seller', 'created_at', 'price_usd', 'price_eur', 'price_uah'
         )
 
     def get_brand(self, obj):
-        return obj.car.brand.id
+        return obj.car.brand.name
 
     def get_model_name(self, obj):
-        return obj.car.model_name.id
+        return obj.car.model_name.name
 
     def get_body_type(self, obj):
         return obj.car.body_type
+
 
 
 class ListingUpdateSerializer(serializers.ModelSerializer):

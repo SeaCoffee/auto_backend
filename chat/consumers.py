@@ -1,14 +1,12 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from channels.db import database_sync_to_async
 from djangochannelsrestframework.decorators import action
-import jwt
-from django.conf import settings
+
 from django.contrib.auth import get_user_model
-from channels.generic.websocket import AsyncWebsocketConsumer
+
+
 from chat.models import ChatModel
-from listings.models import ListingModel
-import json
+
 
 UserModel = get_user_model()
 
@@ -104,10 +102,8 @@ class ChatConsumer(GenericAsyncAPIConsumer):
 
     @database_sync_to_async
     def save_message_to_db(self, body, user):
-        # Сохранение сообщения с привязкой к конкретному объявлению
         ChatModel.objects.create(body=body, user=user, listing_id=self.listing_id)
 
     @database_sync_to_async
     def get_messages(self):
-        # Получение сообщений для конкретного объявления
         return [{'body': item.body, 'user': item.user.username} for item in ChatModel.objects.filter(listing_id=self.listing_id).order_by('id')]
