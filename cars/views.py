@@ -25,7 +25,7 @@ class CarListCreateView(ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = CarFilter
     ordering_fields = ['year', 'brand', 'model_name']
-    ordering = ['year']  # default ordering
+    ordering = ['year']
 
 class CarRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = CarModel.objects.all()

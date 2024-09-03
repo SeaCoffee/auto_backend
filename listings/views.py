@@ -150,6 +150,12 @@ class ListingRetrieveView(RetrieveAPIView):
             return ListingModel.objects.filter(seller=user)
         return ListingModel.objects.all()
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.increment_views()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
 class ListingRetrieveDetailView(RetrieveAPIView):
     queryset = ListingModel.objects.select_related('car')
@@ -158,3 +164,9 @@ class ListingRetrieveDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         return ListingModel.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.increment_views()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)

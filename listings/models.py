@@ -1,7 +1,6 @@
 from django.db import models
 from core.models import BaseModel
 from cars.models import CarModel
-from core.services.upload_photos import upload_photo_listing
 from django.core import validators
 from decimal import Decimal
 from .manager import ListingManager
@@ -31,29 +30,36 @@ class ListingModel(BaseModel):
     initial_currency_rate = models.DecimalField(max_digits=10, decimal_places=4, null=True, editable=False)
 
     objects = ListingManager()
+
     def save(self, *args, **kwargs):
+
         rates = CurrencyModel.objects.all().values('currency_code', 'rate')
         rates_dict = {rate['currency_code']: Decimal(rate['rate']) for rate in rates}
 
-        # Получение базового курса для текущей валюты объявления
-        base_rate = rates_dict.get(self.currency.currency_code,
-                                   Decimal('1'))  # Установка значения по умолчанию на 1, если валюта не найдена
 
-        # Проверка, что базовый курс не равен нулю, чтобы избежать деления на ноль
+        base_rate = rates_dict.get(self.currency.currency_code, Decimal('1'))
+
+        # Проверяем, что базовый курс не равен нулю (что не должно быть в норме)
         if base_rate != Decimal('0'):
-            # Пересчет цен с учетом курса валют
-            self.price_usd = (self.price / base_rate) * rates_dict.get('USD', Decimal('1'))  # USD курс по умолчанию
-            self.price_eur = (self.price / base_rate) * rates_dict.get('EUR', Decimal('1'))  # EUR курс по умолчанию
-            self.price_uah = (self.price / base_rate) * rates_dict.get('UAH', Decimal('1'))  # UAH курс по умолчанию
+            self.price_usd = (self.price / base_rate) * rates_dict.get('USD', Decimal('1'))
+            self.price_eur = (self.price / base_rate) * rates_dict.get('EUR', Decimal('1'))
+            self.price_uah = (self.price / base_rate) * rates_dict.get('UAH', Decimal('1'))
         else:
-            # Если базовый курс равен нулю, установим цены как нулевые значения
+
             self.price_usd = Decimal('0')
             self.price_eur = Decimal('0')
             self.price_uah = Decimal('0')
 
-        super().save(*args, **kwargs)  # Вызов стандартного метода save
+
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'listings'
+
+    def increment_views(self):
+        self.views_day += 1
+        self.views_week += 1
+        self.views_month += 1
+        self.save(update_fields=['views_day', 'views_week', 'views_month'])
 
 

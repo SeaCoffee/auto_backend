@@ -39,7 +39,7 @@ class ListingCreateSerializer(serializers.ModelSerializer):
         model = ListingModel
         fields = (
             'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo', 'price',
-            'currency', 'region'
+            'currency', 'region', 'initial_currency_rate', 'active'
         )
 
     def validate_description(self, value):
@@ -49,7 +49,7 @@ class ListingCreateSerializer(serializers.ModelSerializer):
                 instance.edit_attempts += 1
                 instance.save()
                 if instance.edit_attempts >= 3:
-                    instance.active = False
+                    instance.active = False  # Используем 'active' вместо 'is_active'
                     instance.save()
                     seller = instance.seller
                     managers = get_user_model().objects.filter(role_id=3)

@@ -8,15 +8,15 @@ from core.enums.profanity_enum import ProfanityFilter
 from currency.models import CurrencyModel
 
 
+
 class ListingManager(models.Manager):
-    @atomic
+
+    @atomic()
     def create_listing(self, validated_data, seller):
-        # Получаем brand, model_name и body_type из validated_data
         brand = validated_data.pop('brand')
         model_name = validated_data.pop('model_name')
         body_type = validated_data.pop('body_type')
 
-        # Проверка наличия бренда и модели
         if not Brand.objects.filter(id=brand.id).exists():
             ManagerNotificationService.send_notification(
                 brand_name=brand.name,
@@ -28,19 +28,16 @@ class ListingManager(models.Manager):
         if not ModelName.objects.filter(id=model_name.id, brand=brand).exists():
             raise ValueError("Model does not exist under this brand.")
 
-        # Поиск или создание записи в CarModel
         car_model, created = CarModel.objects.get_or_create(
             brand=brand,
             model_name=model_name,
             body_type=body_type
         )
 
-        # Получение текущего курса валюты
         currency = validated_data.get('currency')
         current_rate = CurrencyModel.objects.filter(currency_code=currency.currency_code).order_by('-updated_at').first()
         initial_currency_rate = current_rate.rate if current_rate else None
 
-        # Создание объекта ListingModel
         listing = self.create(
             car=car_model,
             seller=seller,
@@ -48,18 +45,22 @@ class ListingManager(models.Manager):
             engine=validated_data.get('engine'),
             title=validated_data.get('title'),
             description=validated_data.get('description'),
+            listing_photo=validated_data.get('listing_photo'),
             price=validated_data.get('price'),
             currency=currency,
-            initial_currency_rate=initial_currency_rate,  # Сохранение начального курса валюты
-            region=validated_data.get('region')
+            initial_currency_rate=initial_currency_rate,
+            region=validated_data.get('region'),
+            active=True  # Используем 'active' вместо 'is_active'
         )
+
+        listing.save()
 
         # Проверка на нецензурную лексику
         if ProfanityFilter.is_profane(listing.description):
             listing.edit_attempts += 1
             listing.save()
             if listing.edit_attempts >= 3:
-                listing.is_active = False
+                listing.active = False  # Используем 'active' вместо 'is_active'
                 listing.save()
                 managers = get_user_model().objects.filter(role_id=3)
                 for manager in managers:
@@ -72,8 +73,11 @@ class ListingManager(models.Manager):
             raise ValueError("The description contains prohibited words. Please edit and resubmit.")
 
         # Активируем объявление только после всех проверок и сохранений
-        listing.is_active = True
-        listing.save()
+        print("Setting active to True for listing ID:", listing.id)
+        listing.active = True  # Используем 'active' вместо 'is_active'
+        print("Confirmed active status from database:", listing.active)
 
         return listing
+
+
 
