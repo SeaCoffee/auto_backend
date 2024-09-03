@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from core.services.managers_notification import ManagerNotificationService
 from cars.models import CarModel, Brand, ModelName
 from core.enums.profanity_enum import ProfanityFilter
+from currency.models import CurrencyModel
 
 
 class ListingManager(models.Manager):
@@ -34,6 +35,11 @@ class ListingManager(models.Manager):
             body_type=body_type
         )
 
+        # Получение текущего курса валюты
+        currency = validated_data.get('currency')
+        current_rate = CurrencyModel.objects.filter(currency_code=currency.currency_code).order_by('-updated_at').first()
+        initial_currency_rate = current_rate.rate if current_rate else None
+
         # Создание объекта ListingModel
         listing = self.create(
             car=car_model,
@@ -43,7 +49,8 @@ class ListingManager(models.Manager):
             title=validated_data.get('title'),
             description=validated_data.get('description'),
             price=validated_data.get('price'),
-            currency=validated_data.get('currency'),
+            currency=currency,
+            initial_currency_rate=initial_currency_rate,  # Сохранение начального курса валюты
             region=validated_data.get('region')
         )
 
@@ -69,3 +76,4 @@ class ListingManager(models.Manager):
         listing.save()
 
         return listing
+

@@ -98,12 +98,13 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     brand = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     body_type = serializers.SerializerMethodField()
+    current_currency_rate = serializers.SerializerMethodField()
 
     class Meta:
         model = ListingModel
         fields = (
             'id', 'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo', 'price',
-            'currency', 'region', 'seller'
+            'currency', 'region', 'seller', 'initial_currency_rate', 'current_currency_rate'
         )
 
     def get_brand(self, obj):
@@ -114,6 +115,13 @@ class ListingDetailSerializer(serializers.ModelSerializer):
 
     def get_body_type(self, obj):
         return obj.car.body_type
+
+    def get_current_currency_rate(self, obj):
+        current_rate = CurrencyModel.objects.filter(currency_code=obj.currency.currency_code).order_by('-updated_at').first()
+        if current_rate:
+            return current_rate.rate
+        return None
+
 
 
 class ListingUpdateSerializer(serializers.ModelSerializer):

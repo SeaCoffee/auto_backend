@@ -28,6 +28,7 @@ class ListingModel(BaseModel):
     region = models.CharField( max_length=50, choices=Region.choices(), default=Region.KYIV.value)
     year = models.IntegerField()
     engine = models.CharField(max_length=255)
+    initial_currency_rate = models.DecimalField(max_digits=10, decimal_places=4, null=True, editable=False)
 
     objects = ListingManager()
     def save(self, *args, **kwargs):

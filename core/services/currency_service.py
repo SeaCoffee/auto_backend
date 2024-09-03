@@ -1,4 +1,3 @@
-
 from celery import shared_task
 import requests
 from datetime import datetime
@@ -19,7 +18,7 @@ def update_currency_rates(self):
         with transaction.atomic():
             for rate in rates:
                 currency_code = rate['ccy']
-                if currency_code in target_currencies:
+                if currency_code in target_currencies and float(rate['sale']) > 0:
                     CurrencyModel.objects.update_or_create(
                         currency_code=currency_code,
                         defaults={'rate': float(rate['sale']), 'updated_at': datetime.now()}
