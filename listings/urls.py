@@ -3,6 +3,8 @@ from .views import ListingCreateView, PremiumStatsView, ListingUpdateView, \
     ListingDeleteView, ListingListView, ListingAddPhotoAPIView,\
     RegionsAPIView, UserListingsView, ListingRetrieveView, ListingRetrieveDetailView
 
+
+
 urlpatterns = [
     path('create/', ListingCreateView.as_view(), name='listing-create'),
     path('regions/', RegionsAPIView.as_view(), name='regions_enum'),

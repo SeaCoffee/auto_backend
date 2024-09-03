@@ -64,6 +64,8 @@ class ListingManager(models.Manager):
                 raise ValueError("Maximum edit attempts exceeded. The listing has been deactivated.")
             raise ValueError("The description contains prohibited words. Please edit and resubmit.")
 
+        # Активируем объявление только после всех проверок и сохранений
         listing.is_active = True
         listing.save()
+
         return listing

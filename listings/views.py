@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import django_filters
 from django.db.models import Avg
+from django.db.models import F, ExpressionWrapper, DecimalField
+
 
 from cars.filters import CarFilter
 from cars.models import CarModel
@@ -85,29 +87,33 @@ class PremiumStatsView(RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsPremiumSeller]
 
     def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({'error': 'User is not authenticated'}, status=401)
-
-        if not hasattr(request.user, 'role'):
-            return Response({'error': 'User does not have a role'}, status=400)
-
         listing_id = kwargs.get('listing_id')
-        listing = ListingModel.objects.filter(id=listing_id).select_related('car').first()
+        listing = ListingModel.objects.filter(id=listing_id).select_related('car', 'currency').first()
         if not listing:
             return Response({'error': 'Listing not found'}, status=404)
 
-        # Применяем CarFilter для фильтрации по автомобилям
         car_filter = CarFilter(request.GET, queryset=CarModel.objects.all())
         cars = car_filter.qs
 
-        # Фильтрация объявлений по автомобилям и региону
-        listings = ListingModel.objects.filter(car__in=cars, region=listing.region)
-        region_avg_price = listings.aggregate(Avg('price_usd'))['price_usd__avg']  # Предполагаем, что цены уже в USD
-        country_avg_price = ListingModel.objects.filter(car__in=cars).aggregate(Avg('price_usd'))['price_usd__avg']
+        # Преобразование цен к USD для корректной агрегации
+        listings = ListingModel.objects.filter(car__in=cars, region=listing.region).annotate(
+            price_in_usd=ExpressionWrapper(
+                F('price') / F('currency__rate'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        )
+
+        region_avg_price = listings.aggregate(Avg('price_in_usd'))['price_in_usd__avg']
+        country_avg_price = ListingModel.objects.filter(car__in=cars).annotate(
+            price_in_usd=ExpressionWrapper(
+                F('price') / F('currency__rate'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).aggregate(Avg('price_in_usd'))['price_in_usd__avg']
 
         return Response({
             'views_data': {
-                'total_views': listing.views_day + listing.views_week + listing.views_month,  # Суммарные просмотры
+                'total_views': listing.views_day + listing.views_week + listing.views_month,
                 'views_day': listing.views_day,
                 'views_week': listing.views_week,
                 'views_month': listing.views_month,

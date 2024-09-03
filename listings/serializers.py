@@ -59,39 +59,36 @@ class ListingCreateSerializer(serializers.ModelSerializer):
                             username=seller.username,
                             manager=manager
                         )
-                    raise serializers.ValidationError("Maximum edit attempts exceeded. The listing has been deactivated.")
+                    raise serializers.ValidationError(
+                        "Maximum edit attempts exceeded. The listing has been deactivated.")
                 raise serializers.ValidationError("The description contains prohibited words.")
         return value
 
     def validate(self, data):
-        print("Валидация данных:", data)
         request = self.context.get('request')
         seller = request.user
 
         if seller.account_type == 'basic' and ListingModel.objects.filter(seller=seller).count() >= 1:
-            print("Превышен лимит для базового аккаунта")
             raise serializers.ValidationError("Basic account holders can only create one listing.")
 
         brand = data.get('brand')
         model_name = data.get('model_name')
 
         if not ModelName.objects.filter(brand=brand, id=model_name.id).exists():
-            print(f"Модель {model_name} не найдена под брендом {brand}")
             raise serializers.ValidationError("Car model with specified details does not exist.")
 
-        print("Данные валидны")
         return data
 
     def create(self, validated_data):
         request = self.context.get('request')
-        print('request')
         seller = request.user
         listing_photo = validated_data.pop('listing_photo', None)
 
-        listing = ListingModel.objects.create_listing(validated_data, seller)  # Вызов создания объявления
+        # Создаем объявление через менеджер
+        listing = ListingModel.objects.create_listing(validated_data, seller)
 
         if listing_photo:
-            listing.listing_photo = listing_photo  # Сохранение фотографии если она есть
+            listing.listing_photo = listing_photo
             listing.save()
 
         return listing
@@ -101,24 +98,22 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     brand = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     body_type = serializers.SerializerMethodField()
-    currency_display = serializers.CharField(source='currency.currency_code', read_only=True)
 
     class Meta:
         model = ListingModel
         fields = (
-            'id', 'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo',
-            'price', 'currency_display', 'region', 'seller', 'created_at', 'price_usd', 'price_eur', 'price_uah'
+            'id', 'brand', 'model_name', 'body_type', 'year', 'engine', 'title', 'description', 'listing_photo', 'price',
+            'currency', 'region', 'seller'
         )
 
     def get_brand(self, obj):
-        return obj.car.brand.name
+        return obj.car.brand.id
 
     def get_model_name(self, obj):
-        return obj.car.model_name.name
+        return obj.car.model_name.id
 
     def get_body_type(self, obj):
         return obj.car.body_type
-
 
 
 class ListingUpdateSerializer(serializers.ModelSerializer):
