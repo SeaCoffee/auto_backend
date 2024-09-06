@@ -1,4 +1,7 @@
 from django.urls import path
+from django.conf.urls.static import static
+from django.conf import settings
+
 from .views import ListingCreateView, PremiumStatsView, ListingUpdateView, \
     ListingDeleteView, ListingListView, ListingAddPhotoAPIView,\
     RegionsAPIView, UserListingsView, ListingRetrieveView, ListingRetrieveDetailView, BrandRequestView
@@ -18,5 +21,5 @@ urlpatterns = [
     path('premium/<int:listing_id>/stats/', PremiumStatsView.as_view(), name='premium_stats'),
     path('brands/request/', BrandRequestView.as_view(), name='brand-request'),
 
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

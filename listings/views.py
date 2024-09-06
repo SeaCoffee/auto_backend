@@ -179,14 +179,12 @@ class BrandRequestView(CreateAPIView):
         if not brand_name:
             return Response({"error": "Название бренда обязательно"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Получаем имя пользователя из запроса
         username = request.user.username
 
-        # Отправляем уведомление менеджеру
         ManagerNotificationService.send_notification(
             brand_name=brand_name,
-            model_name=None,  # модель может быть None, если не требуется
-            username=username  # здесь должно передаваться имя пользователя
+            model_name=None,
+            username=username
         )
 
         return Response({"message": "Запрос на добавление бренда отправлен менеджеру"}, status=status.HTTP_201_CREATED)
