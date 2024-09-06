@@ -6,7 +6,6 @@ from .models import CarModel, Brand, ModelName
 from core.services.managers_notification import ManagerNotificationService
 
 
-
 class CarSerializer(serializers.ModelSerializer):
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all())
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all())
@@ -19,10 +18,10 @@ class CarSerializer(serializers.ModelSerializer):
         brand = validated_data.get('brand')
         model_name_id = validated_data.get('model_name').id
 
-        # Проверка существования ModelName для данного бренда
+
         if not ModelName.objects.filter(id=model_name_id, brand=brand).exists():
-            user = self.context['request'].user  # Получение текущего пользователя
-            model_name = ModelName.objects.get(id=model_name_id)  # Получаем объект ModelName по ID для уведомления
+            user = self.context['request'].user
+            model_name = ModelName.objects.get(id=model_name_id)
             self.send_manager_notification(brand.name, model_name.name, user)
             raise serializers.ValidationError("Brand or model does not exist. Notification sent to manager.")
 

@@ -22,19 +22,19 @@ app = Celery('configs')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.conf.imports = ('core.services.currency_service',)
-# Откладываем запуск Celery для регистрации всех задач
+
 
 app.autodiscover_tasks(['core.services'])
 
-# Настройка расписания задач
+
 app.conf.beat_schedule = {
     'update-currency-rates-midnight': {
         'task': 'core.services.currency_service.update_currency_rates',
-        'schedule': crontab(hour=0, minute=0),  # Запуск в полночь
+        'schedule': crontab(hour=0, minute=1),
     },
     'retry-update-currency-rates-noon': {
         'task': 'core.services.currency_service.update_currency_rates',
-        'schedule': crontab(hour=12, minute=0),  # Повторный запуск в полдень
+        'schedule': crontab(hour=12, minute=0),
     }
 }
 

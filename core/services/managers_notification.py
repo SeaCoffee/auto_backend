@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import get_template
 from .email_service import EmailService
-import os
 import random
+from configs.celery import app
 
 
 class ManagerNotificationService:
@@ -15,7 +13,6 @@ class ManagerNotificationService:
             print("No managers found with role_id = 3.")
             return
 
-        # Выбор случайного менеджера
         manager = random.choice(managers)
         context = {
             'brand_name': brand_name,
@@ -24,7 +21,7 @@ class ManagerNotificationService:
         }
         subject = 'Review Listing Edit Attempts'
         template_name = 'manager_notification_email.html'
-        ManagerNotificationService.__send_email(manager.email, template_name, context, subject)
+        EmailService.send_email.delay(manager.email, template_name, context, subject)
 
     @staticmethod
     def send_profanity_notification(description, username, manager):
@@ -34,12 +31,4 @@ class ManagerNotificationService:
         }
         subject = 'Profanity Alert: Review Listing'
         template_name = 'profanity_notification_email.html'
-        ManagerNotificationService.__send_email(manager.email, template_name, context, subject)
-
-    @staticmethod
-    def __send_email(to: str, template_name: str, context: dict, subject=''):
-        template = get_template(template_name)
-        html_content = template.render(context)
-        msg = EmailMultiAlternatives(subject, body="", from_email=os.environ.get('EMAIL_HOST_USER'), to=[to])
-        msg.attach_alternative(html_content, 'text/html')
-        msg.send()
+        EmailService.send_email.delay(manager.email, template_name, context, subject)

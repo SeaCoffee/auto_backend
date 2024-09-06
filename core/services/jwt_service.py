@@ -42,12 +42,6 @@ class JWTService:
         token = token_class.for_user(user)
         token['created_by'] = token_class.__name__
 
-        # Отладка
-        print("Token Debug Info:")
-        print(f"User ID: {user.id}")
-        print(f"Account Type: {user.account_type}")
-        print(f"Token: {token}")
-
         return token
 
     @staticmethod
@@ -70,7 +64,6 @@ class JWTService:
             token_res = token_class(token)
             token_res.check_blacklist()
 
-            # Проверка на тип токена. Если это SoketToken, не добавляем его в черный список.
             if not isinstance(token_res, SoketToken):
                 token_res.blacklist()
 

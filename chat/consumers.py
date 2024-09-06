@@ -26,7 +26,7 @@ class ChatConsumer(GenericAsyncAPIConsumer):
 
         await self.accept()
 
-        # Используем listing_id из URL
+
         self.listing_id = self.scope['url_route']['kwargs']['listing_id']
         self.room_name = f"listing_{self.listing_id}"
         self.user_name = await self.get_username()
@@ -36,7 +36,7 @@ class ChatConsumer(GenericAsyncAPIConsumer):
             self.channel_name
         )
 
-        # Отправка сообщения о подключении пользователя
+
         await self.channel_layer.group_send(
             self.room_name,
             {
@@ -45,7 +45,7 @@ class ChatConsumer(GenericAsyncAPIConsumer):
             }
         )
 
-        # Отправка предыдущих сообщений
+
         for message in await self.get_messages():
             await self.channel_layer.group_send(
                 self.room_name,

@@ -7,6 +7,7 @@ from .manager import ListingManager
 
 from currency.models import CurrencyModel
 from core.enums.country_region_enum import Region
+from core.services.upload_photos import upload_photo_listing
 
 class ListingModel(BaseModel):
     car = models.ForeignKey(CarModel, on_delete=models.CASCADE, related_name='listings')
@@ -39,7 +40,7 @@ class ListingModel(BaseModel):
 
         base_rate = rates_dict.get(self.currency.currency_code, Decimal('1'))
 
-        # Проверяем, что базовый курс не равен нулю (что не должно быть в норме)
+
         if base_rate != Decimal('0'):
             self.price_usd = (self.price / base_rate) * rates_dict.get('USD', Decimal('1'))
             self.price_eur = (self.price / base_rate) * rates_dict.get('EUR', Decimal('1'))

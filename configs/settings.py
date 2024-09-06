@@ -14,9 +14,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env_path = BASE_DIR / '.env'
 load_dotenv(dotenv_path=env_path)
 
-# settings.py
-
-
 
 
 DEBUG = True
@@ -107,8 +104,8 @@ DATABASES = {
     }
 }
 
-print(os.getenv('MYSQL_HOST'))  # Должно вывести 'db'
-print(os.getenv('MYSQL_DATABASE'))  # Должно вывести 'car_sales_db_copy'
+print(os.getenv('MYSQL_HOST'))
+print(os.getenv('MYSQL_DATABASE'))
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
@@ -169,8 +166,10 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'storage/media/')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'storage', 'media')
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

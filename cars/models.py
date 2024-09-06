@@ -1,7 +1,8 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from core.models import BaseModel
-from django.core.exceptions import ValidationError
+
 
 
 class Brand(BaseModel):
@@ -36,10 +37,10 @@ class CarModel(BaseModel):
 
 
     def clean(self):
-        super().clean()  # Вызов метода базового класса, если он определен
+        super().clean()
         if not (1885 <= self.year <= 2024):
             raise ValidationError({'year': "Year must be between 1885 and 2024."})
-        if not (0.1 <= float(self.engine) <= 20):  # Приведение к float, если engine записан как строка
+        if not (0.1 <= float(self.engine) <= 20):
             raise ValidationError({'engine': "Engine size must be between 0.1 and 20 liters."})
 
     class Meta:
