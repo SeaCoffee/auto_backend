@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import django_filters
 from django.db.models import Avg
 from django.db.models import F, ExpressionWrapper, DecimalField
+from core.services.managers_notification import ManagerNotificationService
+from rest_framework import status
 
 
 from cars.filters import CarFilter
@@ -39,7 +41,6 @@ class ListingAddPhotoAPIView(UpdateAPIView):
         if listing.listing_photo:
             listing.listing_photo.delete()
         super().perform_update(serializer)
-
 
 
 class ListingCreateView(CreateAPIView):
@@ -95,7 +96,6 @@ class PremiumStatsView(RetrieveAPIView):
         car_filter = CarFilter(request.GET, queryset=CarModel.objects.all())
         cars = car_filter.qs
 
-        # Преобразование цен к USD для корректной агрегации
         listings = ListingModel.objects.filter(car__in=cars, region=listing.region).annotate(
             price_in_usd=ExpressionWrapper(
                 F('price') / F('currency__rate'),
@@ -123,8 +123,9 @@ class PremiumStatsView(RetrieveAPIView):
         })
 
 
-class RegionsAPIView(APIView):
+class RegionsAPIView(ListAPIView):
     permission_classes = [AllowAny]
+
     def get(self, request):
         return Response({
             'regions': [(region.value, region.name) for region in Region]
@@ -162,11 +163,30 @@ class ListingRetrieveDetailView(RetrieveAPIView):
     serializer_class = ListingDetailSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return ListingModel.objects.all()
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.increment_views()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+
+class BrandRequestView(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+
+
+    def post(self, request):
+        brand_name = request.data.get('brand_name')
+        if not brand_name:
+            return Response({"error": "Название бренда обязательно"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Получаем имя пользователя из запроса
+        username = request.user.username
+
+        # Отправляем уведомление менеджеру
+        ManagerNotificationService.send_notification(
+            brand_name=brand_name,
+            model_name=None,  # модель может быть None, если не требуется
+            username=username  # здесь должно передаваться имя пользователя
+        )
+
+        return Response({"message": "Запрос на добавление бренда отправлен менеджеру"}, status=status.HTTP_201_CREATED)

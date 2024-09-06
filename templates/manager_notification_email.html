@@ -6,9 +6,13 @@
 </head>
 <body>
 
-<h1>Hello, {{ username }}!</h1>
+<h1>Hello, manager!</h1>
 
-<h3>The brand {{ brand_name }} and model {{ model_name }} are required.</h3>
+<h3>The user {{ username }} has requested the brand {{ brand_name }}.</h3>
+
+{% if model_name %}
+    <h3>Additionally, the model {{ model_name }} was requested.</h3>
+{% endif %}
 
 </body>
 </html>

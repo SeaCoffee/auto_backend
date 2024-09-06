@@ -18,13 +18,9 @@ class ListingManager(models.Manager):
         model_name = validated_data.pop('model_name')
         body_type = validated_data.pop('body_type')
 
+        # Предполагаем, что бренд уже должен существовать на этом этапе
         if not Brand.objects.filter(id=brand.id).exists():
-            ManagerNotificationService.send_notification(
-                brand_name=brand.name,
-                model_name=None,
-                username=seller.username
-            )
-            raise DRFValidationError("Brand does not exist. A request to add a new brand has been sent.")
+            raise DRFValidationError("Selected brand does not exist.")
 
         if not ModelName.objects.filter(id=model_name.id, brand=brand).exists():
             raise DRFValidationError("Model does not exist under this brand.")
@@ -74,12 +70,8 @@ class ListingManager(models.Manager):
                 raise DRFValidationError("Maximum edit attempts exceeded. The listing has been deactivated.")
             raise DRFValidationError("The description contains prohibited words. Please edit and resubmit.")
 
-
-        print(f"Setting active to True for listing ID: {listing.id}")
         listing.active = True
         listing.save()
-
-        print(f"Confirmed active status from database: {listing.active}")
 
         return listing
 
