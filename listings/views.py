@@ -1,27 +1,23 @@
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import UpdateAPIView, CreateAPIView,\
-    ListAPIView, DestroyAPIView, RetrieveAPIView, get_object_or_404
+    ListAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import django_filters
 from django.db.models import Avg
 from django.db.models import F, ExpressionWrapper, DecimalField
 from core.services.managers_notification import ManagerNotificationService
 from rest_framework import status
+from core.enums.profanity_enum import ProfanityFilter
+from django.contrib.auth import get_user_model
 
 
 from cars.filters import CarFilter
 from cars.models import CarModel
 from core.pagination import PagePagination
 from core.enums.country_region_enum import Region
-from rest_framework.parsers import MultiPartParser, FormParser
-
-
 from core.permissions import IsSeller,  IsPremiumSeller, IsManager, IsSellerOrManagerAndOwner
-
 from .serializers import ListingPhotoSerializer, ListingCreateSerializer,\
     ListingUpdateSerializer, PremiumStatsSerializer, ListingListSerializer, ListingDetailSerializer
 from .models import ListingModel
@@ -188,3 +184,5 @@ class BrandRequestView(CreateAPIView):
         )
 
         return Response({"message": "Запрос на добавление бренда отправлен менеджеру"}, status=status.HTTP_201_CREATED)
+
+

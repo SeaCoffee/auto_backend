@@ -9,6 +9,7 @@ from currency.models import CurrencyModel
 from core.enums.country_region_enum import Region
 from core.services.upload_photos import upload_photo_listing
 
+
 class ListingModel(BaseModel):
     car = models.ForeignKey(CarModel, on_delete=models.CASCADE, related_name='listings')
     seller = models.ForeignKey('users.UserModel', on_delete=models.CASCADE, related_name='listings')

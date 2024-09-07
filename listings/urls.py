@@ -4,7 +4,8 @@ from django.conf import settings
 
 from .views import ListingCreateView, PremiumStatsView, ListingUpdateView, \
     ListingDeleteView, ListingListView, ListingAddPhotoAPIView,\
-    RegionsAPIView, UserListingsView, ListingRetrieveView, ListingRetrieveDetailView, BrandRequestView
+    RegionsAPIView, UserListingsView, ListingRetrieveView, ListingRetrieveDetailView, \
+    BrandRequestView
 
 
 
@@ -20,6 +21,7 @@ urlpatterns = [
     path('delete/<int:pk>/', ListingDeleteView.as_view(), name='listing-delete'),
     path('premium/<int:listing_id>/stats/', PremiumStatsView.as_view(), name='premium_stats'),
     path('brands/request/', BrandRequestView.as_view(), name='brand-request'),
+
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

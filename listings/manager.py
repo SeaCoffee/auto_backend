@@ -5,26 +5,35 @@ from core.services.managers_notification import ManagerNotificationService
 from cars.models import CarModel, Brand, ModelName
 from core.enums.profanity_enum import ProfanityFilter
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from core.services.errors import CustomValidationError, ValidationErrors
+
 
 from currency.models import CurrencyModel
-
-
 
 class ListingManager(models.Manager):
 
     @atomic()
     def create_listing(self, validated_data, seller):
-        brand = validated_data.pop('brand')
-        model_name = validated_data.pop('model_name')
-        body_type = validated_data.pop('body_type')
+        # Инициализируем объект для хранения ошибок
+        errors = ValidationErrors()
 
-        # Предполагаем, что бренд уже должен существовать на этом этапе
+        # Извлекаем brand, model_name и body_type из validated_data
+        brand = validated_data.pop('brand', None)
+        model_name = validated_data.pop('model_name', None)
+        body_type = validated_data.pop('body_type', None)
+
+        # Проверка бренда и модели
         if not Brand.objects.filter(id=brand.id).exists():
-            raise DRFValidationError("Selected brand does not exist.")
+            errors.add_error("brand", "Selected brand does not exist.")
 
         if not ModelName.objects.filter(id=model_name.id, brand=brand).exists():
-            raise DRFValidationError("Model does not exist under this brand.")
+            errors.add_error("model_name", "Model does not exist under this brand.")
 
+        # Если есть ошибки, возвращаем их через CustomValidationError
+        if errors.has_errors():
+            raise CustomValidationError("Validation errors: " + str(errors.get_errors()))
+
+        # Создаем объект объявления
         car_model, created = CarModel.objects.get_or_create(
             brand=brand,
             model_name=model_name,
@@ -36,6 +45,7 @@ class ListingManager(models.Manager):
             '-updated_at').first()
         initial_currency_rate = current_rate.rate if current_rate else None
 
+        # Создаем объявление
         listing = self.create(
             car=car_model,
             seller=seller,
@@ -53,7 +63,7 @@ class ListingManager(models.Manager):
 
         listing.save()
 
-        # Проверка на нецензурную лексику
+        # Проверка на ненормативную лексику
         if ProfanityFilter.is_profane(listing.description):
             listing.edit_attempts += 1
             listing.save()
@@ -67,13 +77,12 @@ class ListingManager(models.Manager):
                         username=seller.username,
                         manager=manager
                     )
-                raise DRFValidationError("Maximum edit attempts exceeded. The listing has been deactivated.")
-            raise DRFValidationError("The description contains prohibited words. Please edit and resubmit.")
+                raise CustomValidationError("Maximum edit attempts exceeded. The listing has been deactivated.")
+            raise CustomValidationError("The description contains prohibited words. Please edit and resubmit.")
 
         listing.active = True
         listing.save()
 
         return listing
-
 
 

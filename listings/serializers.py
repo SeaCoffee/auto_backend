@@ -11,6 +11,7 @@ from currency.models import CurrencyModel
 from cars.serializers import CarSerializer, Brand, ModelName
 from core.enums.country_region_enum import Region
 from django.contrib.auth import get_user_model
+from core.services.errors import CustomValidationError
 
 
 import logging
@@ -27,6 +28,7 @@ class ListingPhotoSerializer(serializers.ModelSerializer):
             raise ValidationError('Maximum size of 100KB exceeded')
         return photo
 
+
 class ListingCreateSerializer(serializers.ModelSerializer):
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all(), write_only=True)
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all(), write_only=True)
@@ -42,56 +44,26 @@ class ListingCreateSerializer(serializers.ModelSerializer):
             'currency', 'region', 'initial_currency_rate', 'active'
         )
 
-    def validate_description(self, value):
-        instance = self.instance
-        if ProfanityFilter.is_profane(value):
-            if instance:
-                instance.edit_attempts += 1
-                instance.save()
-                if instance.edit_attempts >= 3:
-                    instance.active = False  # Используем 'active' вместо 'is_active'
-                    instance.save()
-                    seller = instance.seller
-                    managers = get_user_model().objects.filter(role_id=3)
-                    for manager in managers:
-                        ManagerNotificationService.send_profanity_notification(
-                            description=value,
-                            username=seller.username,
-                            manager=manager
-                        )
-                    raise serializers.ValidationError(
-                        "Maximum edit attempts exceeded. The listing has been deactivated.")
-                raise serializers.ValidationError("The description contains prohibited words.")
-        return value
-
-    def validate(self, data):
-        request = self.context.get('request')
-        seller = request.user
-
-        if seller.account_type == 'basic' and ListingModel.objects.filter(seller=seller).count() >= 1:
-            raise serializers.ValidationError("Basic account holders can only create one listing.")
-
-        brand = data.get('brand')
-        model_name = data.get('model_name')
-
-        if not ModelName.objects.filter(brand=brand, id=model_name.id).exists():
-            raise serializers.ValidationError("Car model with specified details does not exist.")
-
-        return data
-
     def create(self, validated_data):
         request = self.context.get('request')
         seller = request.user
-        listing_photo = validated_data.pop('listing_photo', None)
 
-        # Создаем объявление через менеджер
-        listing = ListingModel.objects.create_listing(validated_data, seller)
+        try:
+            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер
+            listing = ListingModel.objects.create_listing(validated_data, seller)
 
-        if listing_photo:
-            listing.listing_photo = listing_photo
-            listing.save()
+            # Обновляем фотографию, если она есть
+            listing_photo = validated_data.get('listing_photo', None)
+            if listing_photo:
+                listing.listing_photo = listing_photo
+                listing.save()
+
+        except CustomValidationError as e:
+            # Возвращаем ошибки, но не выбрасываем стандартную DRF ValidationError
+            raise serializers.ValidationError({"errors": e.message})
 
         return listing
+
 
 
 class ListingDetailSerializer(serializers.ModelSerializer):
