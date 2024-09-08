@@ -1,9 +1,13 @@
 from django.db import models
 
 class BaseModel(models.Model):
+    """
+    Абстрактная модель, содержащая поля для отслеживания времени создания и обновления записей.
+    Это базовый класс для всех моделей, которые должны содержать эти поля.
+    """
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # Дата создания записи, устанавливается автоматически при создании.
+    updated_at = models.DateTimeField(auto_now=True)  # Дата последнего обновления записи, обновляется при каждом изменении.
 
     class Meta:
-        abstract = True
+        abstract = True  # Указывает, что эта модель является абстрактной и не будет создавать отдельную таблицу в базе данных.

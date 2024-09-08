@@ -4,39 +4,55 @@ from datetime import datetime
 
 @dataclass
 class ProfileDataClass:
-    id:int
-    name:str
-    surname:str
-    age:int
-    city:str
-    avatar:str
-    created_at:datetime
-    updated_at:datetime
+    """
+    Класс ProfileDataClass используется для хранения данных профиля пользователя.
+    Аннотация @dataclass автоматически генерирует методы инициализации, представления и сравнения.
+    """
+
+    id: int  # ID профиля.
+    name: str  # Имя пользователя.
+    surname: str  # Фамилия пользователя.
+    age: int  # Возраст пользователя.
+    city: str  # Город проживания.
+    avatar: str  # Ссылка на аватар профиля.
+    created_at: datetime  # Дата создания профиля.
+    updated_at: datetime  # Дата последнего обновления профиля.
 
 
 @dataclass
 class UserDataClass:
-    id:int
-    username:str
-    email:str
-    password:str
-    is_active:bool
-    is_superuser:bool
-    is_staff:bool
-    role:str
-    account_type:str
-    created_at: datetime
-    updated_at: datetime
-    profile:ProfileDataClass
+    """
+    Класс UserDataClass используется для хранения данных о пользователе.
+    Этот класс включает в себя основные данные пользователя, его роль, тип аккаунта и профиль.
+    """
+
+    id: int  # ID пользователя.
+    username: str  # Имя пользователя для входа.
+    email: str  # Электронная почта пользователя.
+    password: str  # Хешированный пароль пользователя.
+    is_active: bool  # Флаг активности пользователя (аккаунт активен или нет).
+    is_superuser: bool  # Флаг суперадминистратора (имеет полные права в системе).
+    is_staff: bool  # Флаг, определяющий, является ли пользователь сотрудником.
+    role: str  # Роль пользователя в системе (например, администратор, менеджер).
+    account_type: str  # Тип аккаунта (например, стандартный или премиум).
+    created_at: datetime  # Дата создания пользователя.
+    updated_at: datetime  # Дата последнего обновления пользователя.
+    profile: ProfileDataClass  # Вложенный объект ProfileDataClass, который хранит данные профиля пользователя.
+
 
 @dataclass
 class ListingDataClass:
-    id: int
-    seller_id: int
-    car_id: int
-    title: str
-    description: str
-    listing_photo: str
-    active: bool
-    created_at: datetime
-    updated_at: datetime
+    """
+    Класс ListingDataClass используется для хранения данных о размещении объявления.
+    Включает информацию о продавце, автомобиле, описании и статусе объявления.
+    """
+
+    id: int  # ID объявления.
+    seller_id: int  # ID продавца, который создал объявление.
+    car_id: int  # ID автомобиля, указанного в объявлении.
+    title: str  # Заголовок объявления.
+    description: str  # Описание объявления.
+    listing_photo: str  # Ссылка на фото объявления.
+    active: bool  # Статус объявления (активное или нет).
+    created_at: datetime  # Дата создания объявления.
+    updated_at: datetime  # Дата последнего обновления объявления.

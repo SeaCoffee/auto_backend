@@ -1,35 +1,43 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
+
 from .models import ListingModel
 from cars.models import CarModel
 from users.models import UserModel
 from core.enums.profanity_enum import ProfanityFilter
 from core.services.email_service import EmailService
-from cars.serializers import CarSerializer
 from core.services.managers_notification import ManagerNotificationService
 from currency.models import CurrencyModel
-from cars.serializers import CarSerializer, Brand, ModelName
+from cars.serializers import CarSerializer
+from cars.models import Brand, ModelName
 from core.enums.country_region_enum import Region
-from django.contrib.auth import get_user_model
 from core.services.errors import CustomValidationError
 
+from django.contrib.auth import get_user_model
 
-import logging
-logger = logging.getLogger(__name__)
 
 class ListingPhotoSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для обработки фотографий в объявлениях. Включает валидацию на размер загружаемого файла.
+    """
     class Meta:
         model = ListingModel
         fields = ['listing_photo']
 
     def validate_listings_photo(self, photo):
-        max_size = 100 * 1024
+        """
+        Проверка на максимальный размер фотографии (100KB).
+        """
+        max_size = 100 * 1024  # Максимальный размер файла в байтах.
         if photo.size > max_size:
-            raise ValidationError('Maximum size of 100KB exceeded')
+            raise ValidationError('Maximum size of 100KB exceeded')  # Ошибка, если файл превышает 100KB.
         return photo
 
 
 class ListingCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания объявления. Включает валидацию и обработку полей, таких как бренд, модель, кузов, регион и фотография.
+    """
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all(), write_only=True)
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all(), write_only=True)
     body_type = serializers.ChoiceField(choices=CarModel.BODY_TYPES, write_only=True)
@@ -45,28 +53,33 @@ class ListingCreateSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        """
+        Метод для создания нового объявления. Включает валидацию данных и сохранение фотографии.
+        """
         request = self.context.get('request')
         seller = request.user
 
         try:
-            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер
+            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер.
             listing = ListingModel.objects.create_listing(validated_data, seller)
 
-            # Обновляем фотографию, если она есть
+            # Обновляем фотографию, если она есть.
             listing_photo = validated_data.get('listing_photo', None)
             if listing_photo:
                 listing.listing_photo = listing_photo
                 listing.save()
 
         except CustomValidationError as e:
-            # Возвращаем ошибки, но не выбрасываем стандартную DRF ValidationError
+            # Возвращаем ошибки, если возникла ошибка валидации.
             raise serializers.ValidationError({"errors": e.message})
 
         return listing
 
 
-
 class ListingDetailSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для детального просмотра объявления. Включает дополнительные поля для бренда, модели и курса валют.
+    """
     brand = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     body_type = serializers.SerializerMethodField()
@@ -80,36 +93,55 @@ class ListingDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_brand(self, obj):
+        """
+        Получение ID бренда автомобиля.
+        """
         return obj.car.brand.id
 
     def get_model_name(self, obj):
+        """
+        Получение ID модели автомобиля.
+        """
         return obj.car.model_name.id
 
     def get_body_type(self, obj):
+        """
+        Получение типа кузова автомобиля.
+        """
         return obj.car.body_type
 
     def get_current_currency_rate(self, obj):
+        """
+        Получение текущего курса валюты для объявления.
+        """
         current_rate = CurrencyModel.objects.filter(currency_code=obj.currency.currency_code).order_by('-updated_at').first()
         if current_rate:
             return current_rate.rate
         return None
 
 
-
 class ListingUpdateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для обновления объявления. Включает валидацию описания и обновление активного статуса.
+    """
     class Meta:
         model = ListingModel
         fields = ['title', 'description', 'price', 'currency', 'listing_photo']
 
     def validate_description(self, value):
+        """
+        Валидация описания на наличие ненормативной лексики.
+        """
         instance = self.instance
         if ProfanityFilter.is_profane(value):
             instance.edit_attempts += 1
             instance.save()
             if instance.edit_attempts >= 3:
+                # Деактивируем объявление после 3 неудачных попыток редактирования.
                 instance.active = False
                 instance.save()
 
+                # Отправляем уведомления менеджерам о нарушении.
                 seller = instance.seller
                 managers = get_user_model().objects.filter(role_id=3)
                 for manager in managers:
@@ -123,13 +155,19 @@ class ListingUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
+        """
+        Обновление объявления и активация его после успешного изменения.
+        """
         instance = super().update(instance, validated_data)
-        instance.active = True
+        instance.active = True  # Активируем объявление после обновления.
         instance.save()
         return instance
 
 
 class PremiumStatsSerializer(serializers.Serializer):
+    """
+    Сериализатор для отображения статистики для премиум-аккаунтов.
+    """
     total_views = serializers.IntegerField()
     views_day = serializers.IntegerField()
     views_week = serializers.IntegerField()
@@ -137,7 +175,11 @@ class PremiumStatsSerializer(serializers.Serializer):
     average_price_by_region = serializers.FloatField(allow_null=True)
     average_price_by_country = serializers.FloatField(allow_null=True)
 
+
 class ListingListSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для краткого списка объявлений. Включает информацию о машине и статусе объявления.
+    """
     car = CarSerializer(read_only=True)
 
     class Meta:

@@ -1,6 +1,12 @@
 from enum import Enum
 
 class Region(Enum):
+    """
+    Перечисление регионов, используемое для выбора конкретного региона.
+    Каждый регион представлен как строка с его именем на латинице.
+    """
+
+    CRIMEA = 'CRIMEA'
     VINNYTSIA = 'VINNYTSIA'
     VOLYN = 'VOLYN'
     DNIPRO = 'DNIPRO'
@@ -9,7 +15,6 @@ class Region(Enum):
     KHERSON = 'KHERSON'
     KHMELNYTSKYI = 'KHMELNYTSKYI'
     KYIV = 'KYIV'
-    KYIV_OBLAST = 'KYIV OBLAST'
     KIROVOHRAD = 'KIROVOHRAD'
     LUHANSK = 'LUHANSK'
     LVIV = 'LVIV'
@@ -25,9 +30,10 @@ class Region(Enum):
     CHERKASY = 'CHERKASY'
     CHERNIVTSI = 'CHERNIVTSI'
     CHERNIHIV = 'CHERNIHIV'
-    CRIMEA = 'CRIMEA'
 
     @classmethod
     def choices(cls):
+        """
+        Возвращает список кортежей с порядковым номером и значением региона для использования в полях с выбором.
+        """
         return [(index + 1, key.value) for index, key in enumerate(cls)]
-
