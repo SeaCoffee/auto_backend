@@ -91,16 +91,19 @@ class BrandModelDataView(ListAPIView):
         """
         Переопределяем метод list для добавления данных о моделях, связанных с брендами.
         """
-        response = super().list(request, *args, **kwargs)
+        brands = Brand.objects.all()
+        response = BrandSerializer(brands, many=True).data
 
-        # Добавляем данные о моделях автомобилей для каждого бренда
-        brands = self.get_queryset()
-        brands_models = {brand.id: ModelNameSerializer(ModelName.objects.filter(brand=brand), many=True).data for brand
-                         in brands}
+        # Создаем правильную структуру для брендов и моделей
+        brands_models = {}
+        for brand in brands:
+            models = ModelName.objects.filter(brand=brand)
+            brands_models[brand.id] = ModelNameSerializer(models, many=True).data
 
         # Объединяем данные сериализатора с моделями автомобилей
-        response.data = {
-            'brands': response.data,
-            'brands_models': brands_models
-        }
-        return response
+        return Response({
+            'brands': response,
+            'brands_models': brands_models  # здесь словарь, где ключ — это ID бренда
+        })
+
+

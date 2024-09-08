@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
-
+from rest_framework.response import Response
 from .models import ListingModel
 from cars.models import CarModel
 from users.models import UserModel
@@ -11,8 +11,8 @@ from currency.models import CurrencyModel
 from cars.serializers import CarSerializer
 from cars.models import Brand, ModelName
 from core.enums.country_region_enum import Region
-from core.services.errors import CustomValidationError
-
+from core.services.errors import CustomValidationError, ValidationErrors
+from rest_framework import status
 from django.contrib.auth import get_user_model
 
 
@@ -35,9 +35,6 @@ class ListingPhotoSerializer(serializers.ModelSerializer):
 
 
 class ListingCreateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания объявления. Включает валидацию и обработку полей, таких как бренд, модель, кузов, регион и фотография.
-    """
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all(), write_only=True)
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all(), write_only=True)
     body_type = serializers.ChoiceField(choices=CarModel.BODY_TYPES, write_only=True)
@@ -53,27 +50,25 @@ class ListingCreateSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        """
-        Метод для создания нового объявления. Включает валидацию данных и сохранение фотографии.
-        """
         request = self.context.get('request')
         seller = request.user
 
         try:
-            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер.
+            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер
             listing = ListingModel.objects.create_listing(validated_data, seller)
 
-            # Обновляем фотографию, если она есть.
+            # Обновляем фотографию, если она есть
             listing_photo = validated_data.get('listing_photo', None)
             if listing_photo:
                 listing.listing_photo = listing_photo
                 listing.save()
 
         except CustomValidationError as e:
-            # Возвращаем ошибки, если возникла ошибка валидации.
+            # Возвращаем ошибки, но не выбрасываем стандартную DRF ValidationError
             raise serializers.ValidationError({"errors": e.message})
 
         return listing
+
 
 
 class ListingDetailSerializer(serializers.ModelSerializer):
@@ -155,21 +150,18 @@ class ListingUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        """
-        Обновление объявления. Если фото не передано, возвращаем ошибку, но не вылетаем.
-        """
-        listing_photo = validated_data.get('listing_photo', None)
 
-        # Проверяем, было ли передано новое фото
-        if not listing_photo:
-            raise serializers.ValidationError({"listing_photo": "Photo is required for updating the listing."})
+            # Проверяем, передан ли файл listing_photo
+            if 'listing_photo' in validated_data:
+                instance.listing_photo = validated_data.get('listing_photo', instance.listing_photo)
 
-        # Если фото было передано, обновляем его
-        instance = super().update(instance, validated_data)
-        instance.active = True  # Активируем объявление после обновления.
-        instance.save()
-        return instance
-
+            # Обновляем остальные поля
+            instance.title = validated_data.get('title', instance.title)
+            instance.description = validated_data.get('description', instance.description)
+            instance.price = validated_data.get('price', instance.price)
+            instance.currency = validated_data.get('currency', instance.currency)
+            instance.save()
+            return instance
 
 
 class PremiumStatsSerializer(serializers.Serializer):

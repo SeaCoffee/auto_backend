@@ -148,15 +148,16 @@ class ProfileAvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
     def validate_avatar(self, avatar):
-        max_size = 100 * 1024
+        max_size = 100 * 1024  # 100 KB
         if avatar.size > max_size:
-            raise serializers.ValidationError('max_size - 100kb')
+            raise serializers.ValidationError('The avatar size exceeds the maximum limit of 100 KB.')
         return avatar
 
     def update(self, instance, validated_data):
         instance.avatar = validated_data.get('avatar', instance.avatar)
         instance.save()
         return instance
+
 
 class BlacklistSerializer(serializers.ModelSerializer):
     class Meta:

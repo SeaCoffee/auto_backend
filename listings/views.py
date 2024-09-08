@@ -20,6 +20,7 @@ from .serializers import ListingPhotoSerializer, ListingCreateSerializer,\
     ListingUpdateSerializer, PremiumStatsSerializer, ListingListSerializer, ListingDetailSerializer
 from .models import ListingModel
 from .filters import ListingFilter
+from core.services.errors import CustomValidationError, ValidationErrors
 
 from django.contrib.auth import get_user_model
 
@@ -49,14 +50,14 @@ class ListingAddPhotoAPIView(UpdateAPIView):
         super().perform_update(serializer)
 
 
+
 class ListingCreateView(CreateAPIView):
-    """
-    Создание нового объявления.
-    """
-    parser_classes = (MultiPartParser, FormParser)
     queryset = ListingModel.objects.all()
     serializer_class = ListingCreateSerializer
     permission_classes = [IsSeller]
+    parser_classes = (MultiPartParser, FormParser)
+
+
 
 
 class ListingUpdateView(UpdateAPIView):
