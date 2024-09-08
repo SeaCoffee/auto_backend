@@ -8,6 +8,7 @@ import django_filters
 from django.db.models import Avg
 from django.db.models import F, ExpressionWrapper, DecimalField
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from core.services.managers_notification import ManagerNotificationService
 from cars.filters import CarFilter
@@ -65,7 +66,7 @@ class ListingUpdateView(UpdateAPIView):
     queryset = ListingModel.objects.all()
     serializer_class = ListingUpdateSerializer
     permission_classes = [IsSellerOrManagerAndOwner]
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def get_queryset(self):
         """

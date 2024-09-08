@@ -156,12 +156,20 @@ class ListingUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Обновление объявления и активация его после успешного изменения.
+        Обновление объявления. Если фото не передано, возвращаем ошибку, но не вылетаем.
         """
+        listing_photo = validated_data.get('listing_photo', None)
+
+        # Проверяем, было ли передано новое фото
+        if not listing_photo:
+            raise serializers.ValidationError({"listing_photo": "Photo is required for updating the listing."})
+
+        # Если фото было передано, обновляем его
         instance = super().update(instance, validated_data)
         instance.active = True  # Активируем объявление после обновления.
         instance.save()
         return instance
+
 
 
 class PremiumStatsSerializer(serializers.Serializer):

@@ -8,8 +8,8 @@ class PagePagination(PageNumberPagination):
     """
     Кастомная пагинация для API. Управляет размером страниц и количеством элементов на странице.
     """
-    page_size = 25  # Размер страницы по умолчанию.
-    max_page_size = 10  # Максимальный размер страницы.
+    page_size = 100  # Размер страницы по умолчанию.
+    max_page_size = 100  # Максимальный размер страницы.
     page_size_query_param = 'size'  # Параметр запроса для управления размером страницы.
 
     def get_paginated_response(self, data):
