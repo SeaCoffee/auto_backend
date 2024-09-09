@@ -33,7 +33,6 @@ class ListingPhotoSerializer(serializers.ModelSerializer):
             raise ValidationError('Maximum size of 100KB exceeded')  # Ошибка, если файл превышает 100KB.
         return photo
 
-
 class ListingCreateSerializer(serializers.ModelSerializer):
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all(), write_only=True)
     model_name = serializers.PrimaryKeyRelatedField(queryset=ModelName.objects.all(), write_only=True)
@@ -54,7 +53,7 @@ class ListingCreateSerializer(serializers.ModelSerializer):
         seller = request.user
 
         try:
-            # Передаем все validated_data, включая brand, model_name и body_type, в менеджер
+            # Создаем объявление через менеджер
             listing = ListingModel.objects.create_listing(validated_data, seller)
 
             # Обновляем фотографию, если она есть

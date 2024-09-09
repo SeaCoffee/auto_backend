@@ -1,4 +1,26 @@
 mysql/mysql.sock
-venv/
 mysql/
+.venv/
+storage/media/
+frontend/
+client/
 node_modules/
+
+# Файлы окружения и конфигурации
+.env
+.dockerignore
+
+# Лог-файлы
+*.log
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Локальные конфигурации IDE
+.idea/
+.vscode/
+
+# Файлы Docker
+docker-compose.override.yml
